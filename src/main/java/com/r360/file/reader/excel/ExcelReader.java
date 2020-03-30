@@ -3,13 +3,8 @@ package com.r360.file.reader.excel;
 import com.r360.file.utils.FileUtils;
 import org.apache.commons.compress.utils.Lists;
 import org.apache.log4j.Logger;
-import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.*;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
@@ -75,39 +70,21 @@ public class ExcelReader {
                                 case 19 :
                                 case 20 :
                                 case 21 :
-                                case 22 :
                                     cell.setCellType(CellType.STRING);
                                     String cellValue = cell.getStringCellValue();
                                     String[] testScenario;
-                                    if(column==22 && !isFirstIndex) {
-                                        if(cellList.get(5).getStringCellValue().contains(",")) {
-                                            int baseAmountLength = cellList.get(5).getStringCellValue().split(",").length;
-                                            testScenario = new String[baseAmountLength];
-                                            String[] baseAmounts = cellList.get(5).getStringCellValue().split(",");
-                                            for(int j=0; j<baseAmountLength; j++) {
-                                                if(Integer.parseInt(baseAmounts[j])>=100) {
-                                                    testScenario[j] = "1";
-                                                } else {
-                                                    testScenario[j] = "0";
-                                                }
-                                            }
-                                        } else {
-                                            testScenario = new String[1];
-                                            if(Integer.parseInt(cellList.get(5).getStringCellValue())>=100) {
-                                                testScenario[0] = "1";
-                                            } else {
-                                                testScenario[0] = "0";
-                                            }
-                                        }
+                                    if(cellValue.contains(",")) {
+                                        testScenario = cellValue.split(",");
                                     } else {
-                                        if(cellValue.contains(",")) {
-                                            testScenario = cellValue.split(",");
-                                        } else {
-                                            testScenario = new String[]{cellValue};
-                                        }
+                                        testScenario = new String[]{cellValue};
                                     }
                                     testScenarios.add(testScenario);
                                     break;
+                                }
+                                if(column==22 && isFirstIndex) {
+                                    String cellValue = cell.getStringCellValue();
+                                    String[] testScenario = new String[]{cellValue};
+                                    testScenarios.add(testScenario);
                                 }
                             });
                         List<List<String>> combinationOfScenarios = new LinkedList<>();
@@ -138,10 +115,11 @@ public class ExcelReader {
                         listOfTestCaseObjects = getCombinationOfScenarios(childTestScenarios, stringObjectOfTestCase, listOfTestCaseObjects);
                     } else {
                         List<String> stringObjectOfTestCaseCopy = new LinkedList<>(stringObjectOfTestCase);
+                        setAmountBasedOnBaseAmount(stringObjectOfTestCaseCopy);
                         listOfTestCaseObjects.add(stringObjectOfTestCaseCopy);
                     }
                     if(stringObjectOfTestCase.get(stringObjectOfTestCase.size()-1).equalsIgnoreCase(testScenarioCases[j])) {
-                        stringObjectOfTestCase.remove(testScenarioCases[j]);
+                        stringObjectOfTestCase.remove(stringObjectOfTestCase.size()-1);
                     } else {
                         int fromIndex = stringObjectOfTestCase.indexOf(testScenarioCases[j]);
                         for (int l = stringObjectOfTestCase.size() - 1; l >= fromIndex; l--) {
@@ -154,7 +132,11 @@ public class ExcelReader {
                 stringObjectOfTestCase.add(testScenarioCases[0]);
             }
         }
-        if(stringObjectOfTestCase.size()==rowLength) {
+        if(stringObjectOfTestCase.size()==(rowLength-1)) {
+            List<String> stringObjectOfTestCaseCopy = new LinkedList<>(stringObjectOfTestCase);
+            setAmountBasedOnBaseAmount(stringObjectOfTestCaseCopy);
+            listOfTestCaseObjects.add(stringObjectOfTestCaseCopy);
+        } else if(stringObjectOfTestCase.size()==rowLength) {
             List<String> stringObjectOfTestCaseCopy = new LinkedList<>(stringObjectOfTestCase);
             listOfTestCaseObjects.add(stringObjectOfTestCaseCopy);
         }
@@ -181,5 +163,17 @@ public class ExcelReader {
         ExcelReader excelReader = new ExcelReader();
         combinationOfScenarios = excelReader.getCombinationOfScenarios(testScenarios, stringObjectOfTestCase, combinationOfScenarios);
         System.out.println(combinationOfScenarios);
+    }
+
+    private void setAmountBasedOnBaseAmount(List<String> stringObjectOfTestCase) {
+        if(stringObjectOfTestCase.size()==(rowLength-1)) {
+            if(Integer.parseInt(stringObjectOfTestCase.get(5))>=100) {
+                stringObjectOfTestCase.add("1");
+            } else if(Integer.parseInt(stringObjectOfTestCase.get(5))<100) {
+                stringObjectOfTestCase.add("0");
+            } else {
+
+            }
+        }
     }
 }
