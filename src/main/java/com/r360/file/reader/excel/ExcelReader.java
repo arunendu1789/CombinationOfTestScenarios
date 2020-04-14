@@ -91,7 +91,8 @@ public class ExcelReader {
                         combinationOfScenarios = getCombinationOfScenarios(testScenarios, stringObjectOfTestCase, combinationOfScenarios);
                         int index = 0;
                         for(List<String> combinationOfScenario : combinationOfScenarios) {
-                            mapOfTestCaseCombinations.put(stringObjectOfTestCase.get(0)+"-"+(index++), combinationOfScenario);
+                            mapOfTestCaseCombinations.put(stringObjectOfTestCase.get(0)+"-"+(row.getRowNum()+"-"+(index++)),
+                                    combinationOfScenario);
                         }
                     }
                 });
